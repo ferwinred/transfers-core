@@ -10,5 +10,7 @@ spring:
 
 app:
   security:
-    jwt-secret: ${JWT_SECRET:demo-secret-solo-local-no-usar-en-produccion-0123456789}
+    # Sin secretos en el repositorio: si no se define JWT_SECRET, se genera uno aleatorio al arrancar
+    # (32 caracteres). Los tokens dejan de servir al reiniciar, que es justo lo que se espera de una demo.
+    jwt-secret: ${JWT_SECRET:${random.value}}
     demo-token-endpoint: true

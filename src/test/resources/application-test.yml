@@ -6,7 +6,7 @@ spring:
 
 app:
   security:
-    jwt-secret: test-secret-solo-para-pruebas-0123456789abcdef
+    jwt-secret: ${random.value}   # secreto efímero: nunca un valor fijo en el repositorio
     demo-token-endpoint: true
   transfers:
     max-amount: 10000000.00

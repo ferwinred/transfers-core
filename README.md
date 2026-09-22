@@ -13,7 +13,7 @@ API **transaccional** de transferencias entre cuentas, con un front en Angular, 
 - **Idempotencia:** un reintento por falla de red **no cobra dos veces** (`Idempotency-Key`).
 - **Concurrencia segura:** bloqueo pesimista en orden fijo. Con 20 retiros simultáneos no se gasta dos veces el mismo dinero ni hay deadlocks.
 - **Libro contable de doble partida:** cada transferencia genera un débito y un crédito que suman cero.
-- **Código seguro** (OWASP API Top 10): JWT con scopes, protección contra BOLA, validación por allow-list, errores RFC 9457 sin detalles internos, cabeceras de seguridad y CodeQL.
+- **Código seguro** (OWASP API Top 10): JWT con scopes, protección contra BOLA, validación por allow-list, errores RFC 9457 sin detalles internos, cabeceras de seguridad, CodeQL y **cero secretos en el repositorio**.
 - **DevOps en AWS:** Docker, CI en GitHub Actions, despliegue con OIDC a App Runner + RDS + S3/CloudFront con Terraform.
 
 > Proyecto personal de portafolio con **datos ficticios**. Construido con asistencia de IA, revisado y probado; el proceso está en [docs/uso-de-ia.md](docs/uso-de-ia.md).
@@ -49,6 +49,7 @@ Documentación interactiva (perfil demo): `http://localhost:8080/swagger-ui.html
 **Todo con Docker** (PostgreSQL + API + front):
 
 ```bash
+cp .env.example .env     # define tu DB_PASSWORD local (el archivo .env no se versiona)
 docker compose up --build
 # http://localhost:8081  → entrar como ana, carlos o laura
 ```

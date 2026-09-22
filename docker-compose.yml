@@ -1,11 +1,12 @@
 # Entorno local completo: PostgreSQL + API + front. Abrir http://localhost:8081
+# Antes de levantarlo: cp .env.example .env  (la contraseña no se versiona)
 services:
   db:
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: transfers
       POSTGRES_USER: transfers
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-transfers-local}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?define DB_PASSWORD en el archivo .env}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U transfers -d transfers"]
       interval: 5s
@@ -20,8 +21,8 @@ services:
       SPRING_PROFILES_ACTIVE: demo       # datos de ejemplo y tokens de prueba…
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/transfers   # …pero sobre PostgreSQL real
       SPRING_DATASOURCE_USERNAME: transfers
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-transfers-local}
-      JWT_SECRET: ${JWT_SECRET:-local-compose-secret-cambiar-0123456789abcdef}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?define DB_PASSWORD en el archivo .env}
+      # JWT_SECRET no se define: el perfil demo genera uno aleatorio en cada arranque
     ports:
       - "8080:8080"
 
