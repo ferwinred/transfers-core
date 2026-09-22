@@ -1,0 +1,15 @@
+# Perfil de producción (AWS App Runner). Credenciales solo por variables de entorno inyectadas desde Secrets Manager.
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 10
+
+springdoc:
+  api-docs:
+    enabled: false        # no publicar el contrato interno en producción
+  swagger-ui:
+    enabled: false
+
+app:
+  security:
+    demo-token-endpoint: false

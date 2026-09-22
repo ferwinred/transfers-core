@@ -1,0 +1,49 @@
+name: Deploy a AWS
+
+# Despliegue manual. Autenticación con OIDC: GitHub obtiene credenciales temporales de un rol de IAM,
+# sin guardar llaves de AWS en el repositorio. El rol lo crea infra/terraform (github_oidc.tf).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: API → ECR (App Runner despliega automáticamente la etiqueta latest)
+        env:
+          IMAGE: ${{ steps.ecr.outputs.registry }}/transfers-core
+        run: |
+          docker build -t "$IMAGE:${GITHUB_SHA::12}" -t "$IMAGE:latest" .
+          docker push --all-tags "$IMAGE"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Front → S3 + invalidación de CloudFront
+        working-directory: web
+        run: |
+          npm ci --no-audit --no-fund
+          npx ng build
+          aws s3 sync dist/web/browser "s3://${{ vars.WEB_BUCKET }}" --delete
+          aws cloudfront create-invalidation --distribution-id "${{ vars.CLOUDFRONT_ID }}" --paths "/*"

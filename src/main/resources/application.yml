@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: transfers-core
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/transfers}
+    username: ${DB_USER:transfers}
+    password: ${DB_PASSWORD:}
+  jpa:
+    open-in-view: false            # evita consultas perezosas fuera de la transacción
+    hibernate:
+      ddl-auto: validate           # el esquema lo manda Flyway, no Hibernate
+  flyway:
+    locations: classpath:db/migration
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  error:
+    include-stacktrace: never      # código seguro: nunca exponer trazas al cliente
+    include-message: never
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+app:
+  security:
+    # Secreto HMAC para validar JWT. Obligatorio y de al menos 32 bytes (ver SecurityProperties).
+    jwt-secret: ${JWT_SECRET:}
+    issuer: transfers-core
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:4200}
+  transfers:
+    max-amount: 10000000.00        # límite por transferencia (COP)
+    daily-limit: 20000000.00       # límite diario por cuenta origen (COP)

@@ -1,0 +1,14 @@
+# Perfil de demostración: base en memoria con datos de ejemplo y un emisor de tokens de prueba.
+# NUNCA se activa en AWS (ver infra/terraform: SPRING_PROFILES_ACTIVE=prod).
+spring:
+  datasource:
+    url: jdbc:h2:mem:transfers;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password: ""
+  flyway:
+    locations: classpath:db/migration,classpath:db/demo
+
+app:
+  security:
+    jwt-secret: ${JWT_SECRET:demo-secret-solo-local-no-usar-en-produccion-0123456789}
+    demo-token-endpoint: true

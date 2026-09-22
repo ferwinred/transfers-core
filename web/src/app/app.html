@@ -1,0 +1,114 @@
+<header class="topbar">
+  <div class="brand">transfers<span>·core</span></div>
+  @if (session.username(); as user) {
+    <div class="user">
+      <span>{{ user }}</span>
+      <button type="button" class="ghost" (click)="logout()">Salir</button>
+    </div>
+  }
+</header>
+
+<main>
+  @if (problem(); as p) {
+    <div class="alert" role="alert">
+      <strong>{{ p.title }}</strong>
+      <span>{{ p.detail }}</span>
+      @if (p.code) {
+        <code>{{ p.code }}</code>
+      }
+    </div>
+  }
+
+  @if (!session.token()) {
+    <section class="card login">
+      <h1>Transferencias entre cuentas</h1>
+      <p class="muted">Demo con datos ficticios. Elige un usuario de prueba:</p>
+      <div class="users">
+        @for (u of demoUsers; track u) {
+          <button type="button" (click)="login(u)">{{ u }}</button>
+        }
+      </div>
+    </section>
+  } @else {
+    <div class="grid">
+      <section class="card">
+        <h2>Mis cuentas</h2>
+        <ul class="accounts">
+          @for (a of accounts(); track a.accountNumber) {
+            <li>
+              <button type="button" [class.active]="a.accountNumber === selected()" (click)="select(a.accountNumber)">
+                <span class="num">{{ a.accountNumber }}</span>
+                <span class="bal">{{ a.balance | currency: a.currency : 'symbol-narrow' : '1.2-2' }}</span>
+                @if (a.status !== 'ACTIVE') {
+                  <span class="tag">{{ a.status }}</span>
+                }
+              </button>
+            </li>
+          } @empty {
+            <li class="muted">Sin cuentas</li>
+          }
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Nueva transferencia</h2>
+        @if (selectedAccount(); as src) {
+          <form [formGroup]="form" (ngSubmit)="send()" novalidate>
+            <label>
+              Desde
+              <input [value]="src.accountNumber + ' · ' + src.currency" disabled />
+            </label>
+            <label>
+              Cuenta destino
+              <input formControlName="targetAccount" inputmode="numeric" maxlength="10" placeholder="10 dígitos" />
+              @if (form.controls.targetAccount.touched && form.controls.targetAccount.invalid) {
+                <small class="error">Debe tener 10 dígitos</small>
+              }
+            </label>
+            <label>
+              Monto
+              <input formControlName="amount" type="number" min="0.01" step="0.01" />
+              @if (form.controls.amount.touched && form.controls.amount.invalid) {
+                <small class="error">Debe ser mayor que cero</small>
+              }
+            </label>
+            <label>
+              Descripción
+              <input formControlName="description" maxlength="140" />
+            </label>
+            <button type="submit" [disabled]="sending()">{{ sending() ? 'Enviando…' : 'Transferir' }}</button>
+            <p class="key">Idempotency-Key: <code>{{ idempotencyKey() }}</code></p>
+          </form>
+        }
+
+        @if (lastTransfer(); as t) {
+          <div class="ok">
+            {{ t.replayed ? 'Repetición detectada: no se cobró de nuevo.' : 'Transferencia completada.' }}
+            <code>{{ t.transfer.id }}</code>
+          </div>
+        }
+      </section>
+
+      <section class="card wide">
+        <h2>Movimientos</h2>
+        <table>
+          <thead>
+            <tr><th>Fecha</th><th>Tipo</th><th class="r">Monto</th><th class="r">Saldo</th></tr>
+          </thead>
+          <tbody>
+            @for (m of movements(); track m.transferId + m.direction) {
+              <tr>
+                <td>{{ m.createdAt | date: 'short' }}</td>
+                <td [class.debit]="m.direction === 'DEBIT'">{{ m.direction === 'DEBIT' ? 'Débito' : 'Crédito' }}</td>
+                <td class="r">{{ m.amount | currency: selectedAccount()?.currency : 'symbol-narrow' : '1.2-2' }}</td>
+                <td class="r">{{ m.balanceAfter | currency: selectedAccount()?.currency : 'symbol-narrow' : '1.2-2' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4" class="muted">Sin movimientos todavía</td></tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    </div>
+  }
+</main>
